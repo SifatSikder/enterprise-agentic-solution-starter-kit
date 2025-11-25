@@ -3,6 +3,7 @@ Agent Manager - Integrates ADK agents with FastAPI
 Loads agents from adk_agents/ and makes them available via WebSocket
 
 REFACTORED: Now uses official ADK Runner pattern with multi-tenancy support
+Phase 5: Added Vertex AI Memory Bank integration for long-term memory
 """
 import logging
 import sys
@@ -13,6 +14,7 @@ from config.settings import settings
 
 from agents.core.adapter import ADKAgentAdapter, create_adk_agent_adapter
 from agents.core.interfaces import AgentRequest
+from agents.core.vertex_memory_service import VertexMemoryService
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +35,14 @@ class AgentManager:
         # Legacy: Keep raw agents for backward compatibility
         self.agents: Dict[str, any] = {}
 
+        # Phase 5: Vertex AI Memory Bank service for long-term memory
+        self.memory_service: Optional[VertexMemoryService] = None
+
     async def initialize(self):
         """Initialize the agent manager and load ADK agents.
 
         REFACTORED: Now creates ADK agent adapters with Runner support
+        Phase 5: Initializes Vertex AI Memory Bank if enabled
         """
         try:
             # Add adk_agents to Python path
@@ -53,6 +59,21 @@ class AgentManager:
 
             logger.info("Agent manager initialized successfully")
             logger.info(f"Loaded {len(self.adapters)} ADK agent adapters: {list(self.adapters.keys())}")
+
+            # Phase 5: Initialize Vertex AI Memory Bank if enabled
+            if settings.vertex_memory_enabled:
+                logger.info("Initializing Vertex AI Memory Bank...")
+                self.memory_service = VertexMemoryService(
+                    project_id=settings.google_cloud_project,
+                    location=settings.google_cloud_region,
+                    agent_engine_id=settings.vertex_agent_engine_id,
+                    app_name=settings.app_name,
+                )
+                await self.memory_service.initialize()
+                logger.info("✅ Vertex AI Memory Bank enabled and initialized")
+            else:
+                logger.info("Vertex AI Memory Bank disabled (VERTEX_MEMORY_ENABLED=false)")
+
         except Exception as e:
             logger.error(f"Failed to initialize agent manager: {str(e)}")
             raise
@@ -158,6 +179,7 @@ class AgentManager:
         """Stream chat responses from an ADK agent using Runner.
 
         REFACTORED: Now uses ADKAgentAdapter with official ADK Runner pattern
+        Phase 5: Auto-saves session to Memory Bank after completion (if enabled)
 
         Args:
             session_id: Session identifier
@@ -201,6 +223,20 @@ class AgentManager:
                     "agent": agent_name
                 }
 
+                # Phase 5: Auto-save session to Memory Bank (if enabled)
+                if settings.vertex_memory_enabled and settings.vertex_memory_auto_save:
+                    try:
+                        await self.save_session_to_memory(
+                            session_id=session_id,
+                            tenant_id=tenant_id,
+                            user_id=user_id or "anonymous"
+                        )
+                    except Exception as mem_error:
+                        # Don't fail the request if memory save fails
+                        logger.warning(
+                            f"Failed to auto-save session to memory: {mem_error}"
+                        )
+
             except Exception as e:
                 logger.error(f"Agent execution error: {str(e)}")
                 yield {
@@ -213,10 +249,127 @@ class AgentManager:
             logger.error(f"Stream chat error: {str(e)}")
             yield {"error": str(e)}
 
+    async def save_session_to_memory(
+        self,
+        session_id: str,
+        tenant_id: str,
+        user_id: str,
+    ) -> None:
+        """Save session to Vertex AI Memory Bank for long-term memory.
+
+        Phase 5: Extracts key information from the session and stores it
+        as searchable memories for future conversations.
+
+        Args:
+            session_id: Session identifier
+            tenant_id: Tenant identifier
+            user_id: User identifier
+
+        Raises:
+            RuntimeError: If Memory Bank is not enabled or initialized
+        """
+        if not self.memory_service:
+            raise RuntimeError(
+                "Memory Bank not enabled. Set VERTEX_MEMORY_ENABLED=true"
+            )
+
+        try:
+            # Get the session from the adapter's session service
+            # We need to retrieve the full session object to save to memory
+            adapter = next(iter(self.adapters.values()))  # Get any adapter
+            session_service = adapter._runner._session_service
+
+            # Get the app name from the adapter (e.g., "template_simple_agent")
+            # This is critical - we need to use the SAME app_name that was used
+            # when creating the session, otherwise we'll get an empty session
+            app_name = adapter._runner.app_name
+
+            # IMPORTANT: The runner adds tenant prefix to session_id internally
+            # So the actual session ID in storage is: {tenant_id}:{session_id}
+            # We need to use this scoped session ID to retrieve the correct session
+            scoped_session_id = f"{tenant_id}:{session_id}"
+
+            # Get the session
+            session = await session_service.get_session(
+                app_name=app_name,
+                user_id=user_id,
+                session_id=scoped_session_id
+            )
+
+            # Save to memory bank
+            await self.memory_service.add_session_to_memory(
+                session=session,
+                tenant_id=tenant_id,
+                user_id=user_id
+            )
+
+            logger.info(
+                f"✅ Session saved to memory: tenant={tenant_id}, "
+                f"session={session_id}, user={user_id}"
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Failed to save session to memory: tenant={tenant_id}, "
+                f"session={session_id}, error={e}"
+            )
+            raise
+
+    async def search_memory(
+        self,
+        query: str,
+        tenant_id: str,
+        user_id: str,
+        limit: int = 10,
+    ) -> List[Dict]:
+        """Search Vertex AI Memory Bank for relevant memories.
+
+        Phase 5: Uses semantic search to find memories relevant to the query.
+
+        Args:
+            query: Search query
+            tenant_id: Tenant identifier
+            user_id: User identifier
+            limit: Maximum number of memories to return
+
+        Returns:
+            List of memory objects
+
+        Raises:
+            RuntimeError: If Memory Bank is not enabled or initialized
+        """
+        if not self.memory_service:
+            raise RuntimeError(
+                "Memory Bank not enabled. Set VERTEX_MEMORY_ENABLED=true"
+            )
+
+        try:
+            memories = await self.memory_service.search_memory(
+                query=query,
+                tenant_id=tenant_id,
+                user_id=user_id,
+                limit=limit
+            )
+
+            logger.info(
+                f"Found {len(memories)} memories for tenant={tenant_id}, "
+                f"user={user_id}"
+            )
+
+            return memories
+
+        except Exception as e:
+            logger.error(
+                f"Failed to search memories: tenant={tenant_id}, "
+                f"user={user_id}, error={e}"
+            )
+            raise
+
     async def cleanup(self):
         """Cleanup resources.
 
         REFACTORED: Now shuts down all agent adapters
+        Phase 5: Closes Memory Bank service
         """
         # Shutdown all adapters
         for agent_name, adapter in self.adapters.items():
@@ -228,4 +381,13 @@ class AgentManager:
 
         self.adapters.clear()
         self.agents.clear()
+
+        # Phase 5: Close Memory Bank service
+        if self.memory_service:
+            try:
+                await self.memory_service.close()
+                logger.info("Closed Vertex AI Memory Bank service")
+            except Exception as e:
+                logger.error(f"Error closing Memory Bank service: {e}")
+
         logger.info("Agent manager cleaned up")

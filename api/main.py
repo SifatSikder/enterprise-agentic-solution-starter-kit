@@ -9,7 +9,7 @@ import logging
 from typing import Optional
 import json
 
-from api.routes import agents, health, auth
+from api.routes import agents, health, auth, memory
 from api.models.requests import ChatRequest, ChatResponse
 from api.middleware import (
     SecurityMiddleware,
@@ -41,7 +41,10 @@ async def lifespan(app: FastAPI):
     await agent_manager.initialize()
     logger.info("Agent manager initialized")
 
-    # Inject agent_manager into routes
+    # Inject agent_manager into app state for dependency injection
+    app.state.agent_manager = agent_manager
+
+    # Legacy: Also inject into agents routes for backward compatibility
     from api.routes import agents as agents_routes
     agents_routes.set_agent_manager(agent_manager)
     
@@ -101,6 +104,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(agents.router, prefix="/api/agents", tags=["agents"])
+app.include_router(memory.router, prefix="/api", tags=["memory"])  # Phase 5: Memory Bank routes
 
 @app.get("/")
 async def root():

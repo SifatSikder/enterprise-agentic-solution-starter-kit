@@ -64,11 +64,17 @@ class BaseSettings(PydanticBaseSettings):
     agent_timeout: int = 300  # 5 minutes
     agent_max_retries: int = 3
     
-    # Vertex AI Memory Bank (to be implemented)
+    # Vertex AI Memory Bank (Phase 5)
     vertex_memory_enabled: bool = Field(default=False, env="VERTEX_MEMORY_ENABLED")
-    vertex_memory_collection: str = Field(
-        default="agent_memories",
-        env="VERTEX_MEMORY_COLLECTION"
+    vertex_agent_engine_id: Optional[str] = Field(
+        default=None,
+        env="VERTEX_AGENT_ENGINE_ID",
+        description="Agent Engine ID for Memory Bank. If None, creates new instance."
+    )
+    vertex_memory_auto_save: bool = Field(
+        default=True,
+        env="VERTEX_MEMORY_AUTO_SAVE",
+        description="Automatically save sessions to memory after each conversation"
     )
     
     # Feature Flags
