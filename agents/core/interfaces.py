@@ -179,12 +179,7 @@ class SessionService(Protocol):
         """
         ...
     
-    async def save_session(
-        self, 
-        session_id: str, 
-        tenant_id: str,
-        messages: List[Dict[str, Any]]
-    ) -> None:
+    async def save_session(self, session_id: str, tenant_id: str, messages: List[Dict[str, Any]]) -> None:
         """Save session history.
         
         Args:
@@ -214,4 +209,3 @@ class SessionService(Protocol):
             List of session IDs
         """
         ...
-
