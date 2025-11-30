@@ -1,8 +1,6 @@
 """Development environment configuration."""
 
 from typing import List
-from pydantic import Field
-
 from config.environments.base import BaseSettings
 
 
@@ -16,7 +14,7 @@ class DevelopmentSettings(BaseSettings):
     
     # Logging - Verbose for debugging
     log_level: str = "DEBUG"
-    log_format: str = "text"  # Human-readable logs
+    log_format: str = "text"
     
     # CORS - Allow all origins in dev
     cors_origins: List[str] = ["*"]

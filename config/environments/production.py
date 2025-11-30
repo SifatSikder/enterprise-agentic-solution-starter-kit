@@ -19,10 +19,7 @@ class ProductionSettings(BaseSettings):
     log_format: str = "json"
     
     # CORS - Strict origins only
-    cors_origins: List[str] = Field(
-        ...,  # Required in production
-        env="CORS_ORIGINS"
-    )
+    cors_origins: List[str] = Field(..., env="CORS_ORIGINS")
     
     # Rate Limiting - Strict limits
     rate_limit_enabled: bool = True
@@ -51,8 +48,4 @@ class ProductionSettings(BaseSettings):
     
     # GCP Secret Manager (for production secrets)
     use_secret_manager: bool = Field(default=True, env="USE_SECRET_MANAGER")
-    secret_manager_project: str = Field(
-        default="",
-        env="SECRET_MANAGER_PROJECT"
-    )
-
+    secret_manager_project: str = Field(default="", env="SECRET_MANAGER_PROJECT")
