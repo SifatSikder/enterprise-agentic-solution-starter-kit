@@ -22,10 +22,7 @@ class BaseSettings(PydanticBaseSettings):
     google_cloud_region: str = Field(default="us-central1", env="GOOGLE_CLOUD_REGION")
     
     # Default AI Model
-    default_model: str = Field(
-        default="gemini-2.0-flash-exp",
-        env="DEFAULT_MODEL"
-    )
+    default_model: str = Field(default="gemini-2.5-flash-lite", env="DEFAULT_MODEL")
     
     # Logging
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
@@ -40,10 +37,7 @@ class BaseSettings(PydanticBaseSettings):
     api_version: str = "v1"
     
     # CORS
-    cors_origins: List[str] = Field(
-        default=["http://localhost:3000"],
-        env="CORS_ORIGINS"
-    )
+    cors_origins: List[str] = Field(default=["http://localhost:3000"],env="CORS_ORIGINS")
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     cors_allow_headers: List[str] = ["*"]
@@ -64,18 +58,10 @@ class BaseSettings(PydanticBaseSettings):
     agent_timeout: int = 300  # 5 minutes
     agent_max_retries: int = 3
     
-    # Vertex AI Memory Bank (Phase 5)
+    # Vertex AI Memory Bank
     vertex_memory_enabled: bool = Field(default=False, env="VERTEX_MEMORY_ENABLED")
-    vertex_agent_engine_id: Optional[str] = Field(
-        default=None,
-        env="VERTEX_AGENT_ENGINE_ID",
-        description="Agent Engine ID for Memory Bank. If None, creates new instance."
-    )
-    vertex_memory_auto_save: bool = Field(
-        default=True,
-        env="VERTEX_MEMORY_AUTO_SAVE",
-        description="Automatically save sessions to memory after each conversation"
-    )
+    vertex_agent_engine_id: Optional[str] = Field(default=None, env="VERTEX_AGENT_ENGINE_ID", description="Agent Engine ID for Memory Bank. If None, creates new instance.")
+    vertex_memory_auto_save: bool = Field(default=True, env="VERTEX_MEMORY_AUTO_SAVE", description="Automatically save sessions to memory after each conversation")
     
     # Feature Flags
     enable_metrics: bool = False
@@ -87,10 +73,7 @@ class BaseSettings(PydanticBaseSettings):
     require_api_key: bool = Field(default=False, env="REQUIRE_API_KEY")  # Enable in production
 
     # JWT Configuration
-    jwt_secret_key: str = Field(
-        default="your-secret-key-change-in-production-min-32-chars",
-        env="JWT_SECRET_KEY"
-    )
+    jwt_secret_key: str = Field(default="your-secret-key-change-in-production-min-32-chars", env="JWT_SECRET_KEY")
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = Field(default=30, env="JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
 
