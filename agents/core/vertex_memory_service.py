@@ -31,7 +31,6 @@ Usage:
 
 import logging
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 
 from google.adk.memory import VertexAiMemoryBankService
 from google.adk.sessions import Session
@@ -63,13 +62,7 @@ class VertexMemoryService:
         5. Relevant memories are included in agent context
     """
     
-    def __init__(
-        self,
-        project_id: Optional[str] = None,
-        location: Optional[str] = None,
-        agent_engine_id: Optional[str] = None,
-        app_name: Optional[str] = None,
-    ):
+    def __init__(self, project_id: Optional[str] = None, location: Optional[str] = None, agent_engine_id: Optional[str] = None, app_name: Optional[str] = None):
         """Initialize Vertex AI Memory Bank service.
         
         Args:
@@ -153,12 +146,7 @@ class VertexMemoryService:
         """
         return f"{tenant_id}:{self.app_name}"
     
-    async def add_session_to_memory(
-        self,
-        session: Session,
-        tenant_id: str,
-        user_id: Optional[str] = None,
-    ) -> None:
+    async def add_session_to_memory(self, session: Session, tenant_id: str, user_id: Optional[str] = None) -> None:
         """Add session to long-term memory.
         
         Triggers Memory Bank to extract key information from the session
@@ -205,13 +193,7 @@ class VertexMemoryService:
             )
             raise
     
-    async def search_memory(
-        self,
-        query: str,
-        tenant_id: str,
-        user_id: str,
-        limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    async def search_memory(self, query: str, tenant_id: str, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Search long-term memories for relevant information.
         
         Uses semantic search to find memories relevant to the query.

@@ -3,7 +3,6 @@
 import json
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import timedelta
 
 import redis.asyncio as redis
 
@@ -22,12 +21,7 @@ class RedisSessionService:
     - Connection pooling
     """
     
-    def __init__(
-        self,
-        redis_url: str,
-        default_ttl: int = 3600,  # 1 hour default
-        max_connections: int = 10,
-    ):
+    def __init__(self, redis_url: str, default_ttl: int = 3600, max_connections: int = 10):
         """Initialize Redis session service.
         
         Args:
@@ -68,11 +62,7 @@ class RedisSessionService:
         """Get pattern for all sessions in a tenant."""
         return f"session:{tenant_id}:*"
     
-    async def get_session(
-        self,
-        session_id: str,
-        tenant_id: str
-    ) -> Optional[List[Dict[str, Any]]]:
+    async def get_session(self, session_id: str, tenant_id: str) -> Optional[List[Dict[str, Any]]]:
         """Get session history from Redis.
 
         Args:
@@ -106,13 +96,7 @@ class RedisSessionService:
             )
             return None  # Treat errors as session not found
     
-    async def save_session(
-        self,
-        session_id: str,
-        tenant_id: str,
-        messages: List[Dict[str, Any]],
-        ttl: Optional[int] = None,
-    ) -> None:
+    async def save_session(self,session_id: str,tenant_id: str,messages: List[Dict[str, Any]],ttl: Optional[int] = None) -> None:
         """Save session history to Redis with TTL.
         
         Args:
@@ -161,11 +145,7 @@ class RedisSessionService:
             )
             raise
     
-    async def list_sessions(
-        self, 
-        tenant_id: str, 
-        user_id: Optional[str] = None
-    ) -> List[str]:
+    async def list_sessions(self, tenant_id: str, user_id: Optional[str] = None) -> List[str]:
         """List all sessions for a tenant.
         
         Note: This scans Redis keys - use sparingly in production.
@@ -199,12 +179,7 @@ class RedisSessionService:
             logger.error(f"Error listing sessions for tenant {tenant_id}: {e}")
             return []
     
-    async def extend_ttl(
-        self, 
-        session_id: str, 
-        tenant_id: str, 
-        ttl: int
-    ) -> bool:
+    async def extend_ttl(self, session_id: str, tenant_id: str, ttl: int) -> bool:
         """Extend session TTL.
         
         Args:
@@ -259,11 +234,7 @@ class InMemorySessionService:
         """Clear all sessions."""
         self._sessions.clear()
     
-    async def get_session(
-        self,
-        session_id: str,
-        tenant_id: str
-    ) -> Optional[List[Dict[str, Any]]]:
+    async def get_session(self, session_id: str, tenant_id: str) -> Optional[List[Dict[str, Any]]]:
         """Get session from memory.
 
         Returns:
@@ -279,13 +250,7 @@ class InMemorySessionService:
 
         return tenant_sessions[session_id]  # Could be [] if empty
     
-    async def save_session(
-        self,
-        session_id: str,
-        tenant_id: str,
-        messages: List[Dict[str, Any]],
-        ttl: Optional[int] = None,
-    ) -> None:
+    async def save_session(self, session_id: str, tenant_id: str, messages: List[Dict[str, Any]], ttl: Optional[int] = None) -> None:
         """Save session to memory (TTL ignored)."""
         if tenant_id not in self._sessions:
             self._sessions[tenant_id] = {}
@@ -296,11 +261,6 @@ class InMemorySessionService:
         if tenant_id in self._sessions:
             self._sessions[tenant_id].pop(session_id, None)
     
-    async def list_sessions(
-        self, 
-        tenant_id: str, 
-        user_id: Optional[str] = None
-    ) -> List[str]:
+    async def list_sessions(self, tenant_id: str, user_id: Optional[str] = None) -> List[str]:
         """List sessions for tenant."""
         return list(self._sessions.get(tenant_id, {}).keys())
-
