@@ -167,15 +167,16 @@ class SessionService(Protocol):
     Supports different backends (Redis, Firestore, Memory, etc.)
     """
     
-    async def get_session(self, session_id: str, tenant_id: str) -> List[Dict[str, Any]]:
+    async def get_session(self, session_id: str, tenant_id: str) -> Optional[List[Dict[str, Any]]]:
         """Get session history.
-        
+
         Args:
             session_id: Session identifier
             tenant_id: Tenant identifier for isolation
-            
+
         Returns:
-            List of messages in session
+            List of messages in session, or None if session doesn't exist.
+            Empty list [] means session exists but has no messages yet.
         """
         ...
     

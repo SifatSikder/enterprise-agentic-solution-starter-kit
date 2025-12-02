@@ -69,27 +69,28 @@ class RedisSessionService:
         return f"session:{tenant_id}:*"
     
     async def get_session(
-        self, 
-        session_id: str, 
+        self,
+        session_id: str,
         tenant_id: str
-    ) -> List[Dict[str, Any]]:
+    ) -> Optional[List[Dict[str, Any]]]:
         """Get session history from Redis.
-        
+
         Args:
             session_id: Session identifier
             tenant_id: Tenant identifier
-            
+
         Returns:
-            List of messages in session (empty if not found)
+            List of messages in session, or None if session doesn't exist.
+            Empty list [] means session exists but has no messages yet.
         """
         if not self._redis:
             await self.initialize()
-        
+
         key = self._get_key(session_id, tenant_id)
-        
+
         try:
             data = await self._redis.get(key)
-            if data:
+            if data is not None:
                 messages = json.loads(data)
                 logger.debug(
                     f"Retrieved session {session_id} for tenant {tenant_id}: "
@@ -98,12 +99,12 @@ class RedisSessionService:
                 return messages
             else:
                 logger.debug(f"Session {session_id} not found for tenant {tenant_id}")
-                return []
+                return None  # Session doesn't exist
         except Exception as e:
             logger.error(
                 f"Error retrieving session {session_id} for tenant {tenant_id}: {e}"
             )
-            return []
+            return None  # Treat errors as session not found
     
     async def save_session(
         self,
@@ -259,12 +260,24 @@ class InMemorySessionService:
         self._sessions.clear()
     
     async def get_session(
-        self, 
-        session_id: str, 
+        self,
+        session_id: str,
         tenant_id: str
-    ) -> List[Dict[str, Any]]:
-        """Get session from memory."""
-        return self._sessions.get(tenant_id, {}).get(session_id, [])
+    ) -> Optional[List[Dict[str, Any]]]:
+        """Get session from memory.
+
+        Returns:
+            List of messages in session, or None if session doesn't exist.
+            Empty list [] means session exists but has no messages yet.
+        """
+        tenant_sessions = self._sessions.get(tenant_id)
+        if tenant_sessions is None:
+            return None  # Tenant has no sessions
+
+        if session_id not in tenant_sessions:
+            return None  # Session doesn't exist
+
+        return tenant_sessions[session_id]  # Could be [] if empty
     
     async def save_session(
         self,

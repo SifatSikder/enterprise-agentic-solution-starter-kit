@@ -116,13 +116,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
             )
         return parts[0], parts[1]
     
-    async def create_session(
-        self,
-        app_name: str,
-        user_id: str,
-        state: Optional[dict] = None,
-        session_id: Optional[str] = None,
-    ) -> Session:
+    async def create_session(self, app_name: str, user_id: str, state: Optional[dict] = None, session_id: Optional[str] = None) -> Session:
         """Create a new session.
         
         Args:
@@ -175,12 +169,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
         
         return session
     
-    async def get_session(
-        self,
-        app_name: str,
-        user_id: str,
-        session_id: str,
-    ) -> Optional[Session]:
+    async def get_session(self, app_name: str, user_id: str, session_id: str) -> Optional[Session]:
         """Get an existing session.
         
         Args:
@@ -206,8 +195,8 @@ class MultiTenantSessionAdapter(BaseSessionService):
             tenant_id=tenant_id,
         )
 
-        if not messages:
-            # Auto-create session if it doesn't exist
+        if messages is None:
+            # Auto-create session if it doesn't exist (key not found in backend)
             # This is required for ADK Runner which expects sessions to exist
             logger.info(f"Session not found, auto-creating: {session_id}")
             return await self.create_session(
@@ -250,11 +239,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
         
         return session
     
-    async def append_event(
-        self,
-        session: Session,
-        event: Event,
-    ) -> Session:
+    async def append_event(self, session: Session, event: Event) -> Session:
         """Append an event to a session.
         
         Args:
@@ -308,12 +293,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
         
         return session
     
-    async def delete_session(
-        self,
-        app_name: str,
-        user_id: str,
-        session_id: str,
-    ) -> None:
+    async def delete_session(self, app_name: str, user_id: str, session_id: str) -> None:
         """Delete a session.
         
         Args:
@@ -338,11 +318,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
         
         logger.info(f"Deleted session: {session_id}")
     
-    async def list_sessions(
-        self,
-        app_name: str,
-        user_id: str,
-    ) -> List[Session]:
+    async def list_sessions(self, app_name: str, user_id: str) -> List[Session]:
         """List all sessions for a user.
         
         Note: This implementation is limited because we can't easily
@@ -366,4 +342,3 @@ class MultiTenantSessionAdapter(BaseSessionService):
         )
         
         return []
-
