@@ -67,12 +67,7 @@ class ADKAgentAdapter:
         ```
     """
     
-    def __init__(
-        self,
-        adk_agent: Agent | LlmAgent,
-        app_name: str,
-        runner_config: Optional[RunnerConfig] = None,
-    ):
+    def __init__(self, adk_agent: Agent | LlmAgent, app_name: str, runner_config: Optional[RunnerConfig] = None):
         """Initialize ADK agent adapter.
         
         Args:
@@ -243,10 +238,7 @@ class ADKAgentAdapter:
             )
 
 
-def create_adk_agent_adapter(
-    adk_agent: Agent | LlmAgent,
-    app_name: Optional[str] = None,
-) -> ADKAgentAdapter:
+def create_adk_agent_adapter(adk_agent: Agent | LlmAgent, app_name: Optional[str] = None) -> ADKAgentAdapter:
     """Factory function to create an ADK agent adapter.
     
     Args:

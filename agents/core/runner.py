@@ -137,14 +137,7 @@ class MultiTenantRunner:
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
     
-    async def execute(
-        self,
-        user_id: str,
-        session_id: str,
-        tenant_id: str,
-        message: str,
-        context: Optional[Dict[str, Any]] = None,
-    ) -> AgentResponse:
+    async def execute(self, user_id: str, session_id: str, tenant_id: str, message: str, context: Optional[Dict[str, Any]] = None) -> AgentResponse:
         """Execute agent and return complete response.
         
         Args:
@@ -238,14 +231,7 @@ class MultiTenantRunner:
                 details={"tenant_id": tenant_id, "session_id": session_id}
             )
     
-    async def stream(
-        self,
-        user_id: str,
-        session_id: str,
-        tenant_id: str,
-        message: str,
-        context: Optional[Dict[str, Any]] = None,
-    ) -> AsyncIterator[str]:
+    async def stream(self, user_id: str, session_id: str, tenant_id: str, message: str, context: Optional[Dict[str, Any]] = None) -> AsyncIterator[str]:
         """Stream agent responses.
         
         Args:
