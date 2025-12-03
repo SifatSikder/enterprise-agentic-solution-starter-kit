@@ -2,8 +2,8 @@
 Agent Manager - Integrates ADK agents with FastAPI
 Loads agents from adk_agents/ and makes them available via WebSocket
 
-REFACTORED: Now uses official ADK Runner pattern with multi-tenancy support
-Phase 5: Added Vertex AI Memory Bank integration for long-term memory
+Uses official ADK Runner pattern with multi-tenancy support
+Vertex AI Memory Bank integration for long-term memory
 """
 import logging
 import sys
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class AgentManager:
     """Manages ADK agents for FastAPI integration.
 
-    REFACTORED: Now uses ADK Runner pattern with:
+    This class uses ADK Runner pattern with:
     - Official google.adk.runners.Runner
     - Multi-tenant session isolation
     - ADK-compatible SessionService
@@ -35,7 +35,7 @@ class AgentManager:
         # Legacy: Keep raw agents for backward compatibility
         self.agents: Dict[str, any] = {}
 
-        # Phase 5: Vertex AI Memory Bank service for long-term memory
+        # Vertex AI Memory Bank service for long-term memory
         self.memory_service: Optional[VertexMemoryService] = None
 
     async def initialize(self):
@@ -167,15 +167,7 @@ class AgentManager:
             logger.error(f"Failed to load agent {agent_name}: {str(e)}")
             raise
 
-
-    async def stream_chat(
-        self,
-        session_id: str,
-        message: str,
-        agent_name: str = "greeting_agent",
-        tenant_id: str = "default",
-        user_id: Optional[str] = None,
-    ) -> AsyncGenerator[Dict, None]:
+    async def stream_chat(self, session_id: str, message: str, agent_name: str = "template_simple_agent", tenant_id: str = "default", user_id: Optional[str] = None) -> AsyncGenerator[Dict, None]:
         """Stream chat responses from an ADK agent using Runner.
 
         REFACTORED: Now uses ADKAgentAdapter with official ADK Runner pattern
@@ -249,12 +241,7 @@ class AgentManager:
             logger.error(f"Stream chat error: {str(e)}")
             yield {"error": str(e)}
 
-    async def save_session_to_memory(
-        self,
-        session_id: str,
-        tenant_id: str,
-        user_id: str,
-    ) -> None:
+    async def save_session_to_memory(self, session_id: str, tenant_id: str, user_id: str) -> None:
         """Save session to Vertex AI Memory Bank for long-term memory.
 
         Phase 5: Extracts key information from the session and stores it
@@ -315,13 +302,7 @@ class AgentManager:
             )
             raise
 
-    async def search_memory(
-        self,
-        query: str,
-        tenant_id: str,
-        user_id: str,
-        limit: int = 10,
-    ) -> List[Dict]:
+    async def search_memory(self, query: str, tenant_id: str, user_id: str, limit: int = 10) -> List[Dict]:
         """Search Vertex AI Memory Bank for relevant memories.
 
         Phase 5: Uses semantic search to find memories relevant to the query.
