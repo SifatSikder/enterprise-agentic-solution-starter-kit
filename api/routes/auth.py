@@ -160,7 +160,7 @@ async def get_current_user_info(
     
     return UserInfo(
         user_id=user_id,
-        username=user_id,  # In this demo, user_id is the username
+        username=user_id,
         tenant_id=tenant_id,
         permissions=permissions,
     )
