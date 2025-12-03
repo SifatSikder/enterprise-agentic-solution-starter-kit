@@ -29,6 +29,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         "/redoc",
         "/openapi.json",
         "/api/health",
+        "/api/auth/login",
+        "/api/auth/register",
     }
     
     def __init__(self, app, api_keys: Optional[Dict[str, Dict[str, Any]]] = None):
