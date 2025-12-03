@@ -51,13 +51,57 @@ async def lifespan(app: FastAPI):
     if agent_manager:
         await agent_manager.cleanup()
 
-# Create FastAPI app
+# Create FastAPI app with security schemes for Swagger UI
 app = FastAPI(
-    title="ADK Multi-Agent Framework",
+    title="D-Ready's Multi Agentic Framework using ADK",
     description="Enterprise-grade multi-agent AI framework with Google ADK, FastAPI, and Vertex AI",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    swagger_ui_parameters={
+        "persistAuthorization": True,  # Remember auth between page refreshes
+    },
 )
+
+# Add security schemes to OpenAPI schema for Swagger UI
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    from fastapi.openapi.utils import get_openapi
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # Add security schemes
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter your JWT token from /api/auth/login"
+        },
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+            "description": "Enter your API key"
+        }
+    }
+
+    # Apply security globally (can be overridden per endpoint)
+    openapi_schema["security"] = [
+        {"BearerAuth": []},
+        {"ApiKeyAuth": []}
+    ]
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Add security middleware (order matters!)
 # 1. Security headers (first)
@@ -100,7 +144,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(agents.router, prefix="/api/agents", tags=["agents"])
-app.include_router(memory.router, prefix="/api", tags=["memory"])  # Phase 5: Memory Bank routes
+app.include_router(memory.router, prefix="/api", tags=["memory"])
 
 @app.get("/")
 async def root():
