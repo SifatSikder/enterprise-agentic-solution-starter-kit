@@ -62,10 +62,7 @@ async def require_authentication(request: Request) -> bool:
     return authenticated
 
 
-async def require_permissions(
-    request: Request,
-    required_permissions: List[str]
-) -> bool:
+async def require_permissions(request: Request, required_permissions: List[str]) -> bool:
     """Require specific permissions.
     
     Args:
@@ -129,10 +126,7 @@ require_agent_execute = PermissionChecker(["agent:execute"])
 require_admin = PermissionChecker(["admin"])
 
 
-async def get_tenant_from_header(
-    request: Request,
-    x_tenant_id: Optional[str] = None
-) -> str:
+async def get_tenant_from_header(request: Request, x_tenant_id: Optional[str] = None) -> str:
     """Get tenant ID from header or request state.
     
     Args:
@@ -152,10 +146,7 @@ async def get_tenant_from_header(
     return settings.default_tenant_id
 
 
-async def validate_tenant_access(
-    request: Request,
-    tenant_id: str
-) -> bool:
+async def validate_tenant_access(request: Request, tenant_id: str) -> bool:
     """Validate that the authenticated user can access the specified tenant.
     
     Args:
@@ -182,4 +173,3 @@ async def validate_tenant_access(
         )
     
     return True
-
