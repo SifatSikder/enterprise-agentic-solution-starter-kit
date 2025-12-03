@@ -32,9 +32,6 @@ class AgentManager:
         # Store ADK agent adapters (not raw agents)
         self.adapters: Dict[str, ADKAgentAdapter] = {}
 
-        # Legacy: Keep raw agents for backward compatibility
-        self.agents: Dict[str, any] = {}
-
         # Vertex AI Memory Bank service for long-term memory
         self.memory_service: Optional[VertexMemoryService] = None
 
@@ -145,9 +142,6 @@ class AgentManager:
                 # Set GOOGLE_API_KEY environment variable for ADK to use
                 os.environ["GOOGLE_API_KEY"] = settings.google_api_key
                 logger.debug(f"Set GOOGLE_API_KEY environment variable for agent {agent_name}")
-
-            # Store raw agent for backward compatibility
-            self.agents[agent_name] = root_agent
 
             # Create ADK agent adapter with Runner
             adapter = create_adk_agent_adapter(
@@ -361,7 +355,6 @@ class AgentManager:
                 logger.error(f"Error shutting down adapter {agent_name}: {e}")
 
         self.adapters.clear()
-        self.agents.clear()
 
         # Phase 5: Close Memory Bank service
         if self.memory_service:

@@ -41,8 +41,7 @@ def get_settings() -> BaseSettings:
         return DevelopmentSettings()
 
 
-# Global settings instance (for backward compatibility)
-# Prefer using get_settings() with FastAPI Depends for better testability
+# Global settings instance
 settings = get_settings()
 
 

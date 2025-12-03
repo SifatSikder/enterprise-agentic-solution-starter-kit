@@ -15,17 +15,18 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Will be injected by main.py
-_agent_manager = None
 
-def set_agent_manager(manager):
-    """Set the global agent manager (called from main.py)"""
-    global _agent_manager
-    _agent_manager = manager
+def get_agent_manager(request: Request):
+    """Get agent manager from app state via dependency injection."""
+    agent_manager = getattr(request.app.state, "agent_manager", None)
+    if not agent_manager:
+        raise HTTPException(status_code=503, detail="Agent manager not initialized")
+    return agent_manager
 
 @router.get("/list", response_model=List[AgentInfo])
 async def list_agents(
     request: Request,
+    agent_manager=Depends(get_agent_manager),
     tenant_id: str = Depends(get_current_tenant),
     user_id: Optional[str] = Depends(get_current_user),
     _: bool = Depends(require_agent_read),
@@ -38,19 +39,17 @@ async def list_agents(
 
     **Multi-Tenancy:** Returns agents available to the authenticated tenant.
     """
-    if not _agent_manager:
-        raise HTTPException(status_code=503, detail="Agent manager not initialized")
-
     try:
         logger.info(f"Listing agents for tenant={tenant_id}, user={user_id}")
 
         agent_infos = []
-        for agent_name, agent_obj in _agent_manager.agents.items():
-            # Extract metadata from ADK agent object
+        for agent_name, adapter in agent_manager.adapters.items():
+            # Extract metadata from ADK agent adapter
+            adk_agent = adapter._adk_agent
             info = AgentInfo(
                 name=agent_name,
-                description=getattr(agent_obj, 'description', f"ADK agent: {agent_name}"),
-                capabilities=["chat", "streaming", "tools"] if hasattr(agent_obj, 'tools') and agent_obj.tools else ["chat", "streaming"],
+                description=getattr(adk_agent, 'description', f"ADK agent: {agent_name}"),
+                capabilities=["chat", "streaming", "tools"] if hasattr(adk_agent, 'tools') and adk_agent.tools else ["chat", "streaming"],
                 status="active"
             )
             agent_infos.append(info)
@@ -65,6 +64,7 @@ async def list_agents(
 async def chat_with_agent(
     chat_request: ChatRequest,
     request: Request,
+    agent_manager=Depends(get_agent_manager),
     tenant_id: str = Depends(get_current_tenant),
     user_id: Optional[str] = Depends(get_current_user),
     _: bool = Depends(require_agent_execute),
@@ -89,9 +89,6 @@ async def chat_with_agent(
       }'
     ```
     """
-    if not _agent_manager:
-        raise HTTPException(status_code=503, detail="Agent manager not initialized")
-
     try:
         # Use tenant_id from authentication for session isolation
         # Session ID format: {tenant_id}:{user_session_id}
@@ -109,7 +106,7 @@ async def chat_with_agent(
         # For REST endpoint, collect all chunks into one response
         full_message = ""
 
-        async for chunk in _agent_manager.stream_chat(
+        async for chunk in agent_manager.stream_chat(
             session_id=tenant_session_id,
             message=chat_request.message,
             agent_name=agent_name,

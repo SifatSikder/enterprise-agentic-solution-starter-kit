@@ -44,10 +44,6 @@ async def lifespan(app: FastAPI):
     # Inject agent_manager into app state for dependency injection
     app.state.agent_manager = agent_manager
 
-    # Legacy: Also inject into agents routes for backward compatibility
-    from api.routes import agents as agents_routes
-    agents_routes.set_agent_manager(agent_manager)
-    
     yield
     
     # Shutdown
