@@ -1,7 +1,6 @@
 """Core agent management components."""
 
 from agents.core.interfaces import AgentInterface, AgentRequest, AgentResponse, AgentHealthStatus
-from agents.core.factory import AgentFactory
 from agents.core.session_service import SessionService, RedisSessionService
 from agents.core.runner import MultiTenantRunner, RunnerConfig
 from agents.core.adapter import ADKAgentAdapter, create_adk_agent_adapter
@@ -12,7 +11,6 @@ __all__ = [
     "AgentRequest",
     "AgentResponse",
     "AgentHealthStatus",
-    "AgentFactory",
     "SessionService",
     "RedisSessionService",
     "MultiTenantRunner",
