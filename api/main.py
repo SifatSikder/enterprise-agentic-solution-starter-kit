@@ -11,12 +11,7 @@ import json
 
 from api.routes import agents, health, auth, memory
 from api.models.requests import ChatRequest, ChatResponse
-from api.middleware import (
-    SecurityMiddleware,
-    RateLimitMiddleware,
-    SecurityHeadersMiddleware,
-    AuditLogMiddleware,
-)
+from api.middleware import (SecurityMiddleware,RateLimitMiddleware,SecurityHeadersMiddleware,AuditLogMiddleware)
 from agents.manager import AgentManager
 from config.settings import settings
 
