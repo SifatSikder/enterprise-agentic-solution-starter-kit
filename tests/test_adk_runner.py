@@ -19,7 +19,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from agents.manager import AgentManager
-from agents.core.interfaces import AgentRequest
 
 
 async def test_agent_loading():

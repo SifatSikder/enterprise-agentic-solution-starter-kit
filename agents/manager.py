@@ -13,8 +13,8 @@ from typing import Dict, List, Optional, AsyncGenerator
 from config.settings import settings
 
 from agents.core.adapter import ADKAgentAdapter, create_adk_agent_adapter
-from agents.core.interfaces import AgentRequest
 from agents.core.vertex_memory_service import VertexMemoryService
+from agents.helpers import scope_session_id
 
 logger = logging.getLogger(__name__)
 
@@ -189,18 +189,14 @@ class AgentManager:
 
             adapter = self.adapters[agent_name]
 
-            # Create agent request
-            request = AgentRequest(
-                message=message,
-                session_id=session_id,
-                tenant_id=tenant_id,
-                user_id=user_id or "anonymous",
-                stream=True,
-            )
-
-            # Stream using adapter (which uses Runner internally)
+            # Stream using adapter's domain-level method (adapter handles request conversion)
             try:
-                async for chunk in adapter.stream(request):
+                async for chunk in adapter.stream_chat(
+                    message=message,
+                    session_id=session_id,
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                ):
                     yield {
                         "type": "chunk",
                         "content": chunk,
@@ -262,17 +258,16 @@ class AgentManager:
             # Get the session from the adapter's session service
             # We need to retrieve the full session object to save to memory
             adapter = next(iter(self.adapters.values()))  # Get any adapter
-            session_service = adapter._runner._session_service
+            session_service = adapter.get_session_service()
 
             # Get the app name from the adapter (e.g., "template_simple_agent")
             # This is critical - we need to use the SAME app_name that was used
             # when creating the session, otherwise we'll get an empty session
-            app_name = adapter._runner.app_name
+            app_name = adapter.get_runner_app_name()
 
-            # IMPORTANT: The runner adds tenant prefix to session_id internally
+            # The runner adds tenant prefix to session_id internally
             # So the actual session ID in storage is: {tenant_id}:{session_id}
-            # We need to use this scoped session ID to retrieve the correct session
-            scoped_session_id = f"{tenant_id}:{session_id}"
+            scoped_session_id = scope_session_id(tenant_id, session_id)
 
             # Get the session
             session = await session_service.get_session(

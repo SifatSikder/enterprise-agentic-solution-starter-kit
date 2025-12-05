@@ -3,6 +3,11 @@
 This module provides an adapter that wraps google.adk.agents.Agent (or LlmAgent)
 to implement our AgentInterface protocol, enabling seamless integration with
 the FastAPI backend.
+
+The adapter pattern is used here to:
+1. Convert domain-level inputs (message, session_id, tenant_id) to ADK format
+2. Wrap the ADK Runner execution
+3. Convert ADK responses back to our protocol format
 """
 
 import logging
@@ -41,7 +46,7 @@ class ADKAgentAdapter:
         ```python
         from google.adk.agents import Agent
         from agents.core.adapter import ADKAgentAdapter
-        
+
         # Create ADK agent
         adk_agent = Agent(
             name="my_agent",
@@ -50,20 +55,27 @@ class ADKAgentAdapter:
             instruction="You are a helpful assistant",
             tools=[...]
         )
-        
+
         # Wrap with adapter
         adapter = ADKAgentAdapter(adk_agent, app_name="my_app")
         await adapter.initialize()
-        
-        # Use via AgentInterface
-        request = AgentRequest(
+
+        # Use via domain-level methods (preferred - adapter handles conversion)
+        response = await adapter.chat(
             message="Hello",
             session_id="session123",
             tenant_id="acme-corp",
             user_id="user456"
         )
-        
-        response = await adapter.execute(request)
+
+        # Or stream responses
+        async for chunk in adapter.stream_chat(
+            message="Hello",
+            session_id="session123",
+            tenant_id="acme-corp",
+            user_id="user456"
+        ):
+            print(chunk, end="")
         ```
     """
     
@@ -102,6 +114,22 @@ class ADKAgentAdapter:
     def description(self) -> str:
         """Get agent description."""
         return self.adk_agent.description or f"ADK agent: {self.adk_agent.name}"
+
+    def get_session_service(self) -> Any:
+        """Get the session service used by the runner.
+
+        Returns:
+            The session service instance (ADK-compatible BaseSessionService)
+        """
+        return self._runner._session_service
+
+    def get_runner_app_name(self) -> str:
+        """Get the app name used by the runner.
+
+        Returns:
+            The application name string
+        """
+        return self._runner.app_name
     
     async def initialize(self) -> None:
         """Initialize the adapter and runner.
@@ -123,7 +151,74 @@ class ADKAgentAdapter:
             logger.info(f"ADKAgentAdapter shutdown for '{self.name}'")
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
-    
+
+    async def chat(
+        self,
+        message: str,
+        session_id: str,
+        tenant_id: str,
+        user_id: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> AgentResponse:
+        """Execute agent with domain-level inputs.
+
+        Args:
+            message: User message
+            session_id: Session identifier
+            tenant_id: Tenant identifier for multi-tenancy
+            user_id: Optional user identifier
+            context: Optional context data
+
+        Returns:
+            Complete agent response
+
+        Raises:
+            AgentExecutionException: If execution fails
+        """
+        request = AgentRequest(
+            message=message,
+            session_id=session_id,
+            tenant_id=tenant_id,
+            user_id=user_id or "anonymous",
+            context=context or {},
+            stream=False,
+        )
+        return await self.execute(request)
+
+    async def stream_chat(
+        self,
+        message: str,
+        session_id: str,
+        tenant_id: str,
+        user_id: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> AsyncIterator[str]:
+        """Stream agent responses with domain-level inputs.
+
+        Args:
+            message: User message
+            session_id: Session identifier
+            tenant_id: Tenant identifier for multi-tenancy
+            user_id: Optional user identifier
+            context: Optional context data
+
+        Yields:
+            Response chunks as they're generated
+
+        Raises:
+            AgentExecutionException: If streaming fails
+        """
+        request = AgentRequest(
+            message=message,
+            session_id=session_id,
+            tenant_id=tenant_id,
+            user_id=user_id or "anonymous",
+            context=context or {},
+            stream=True,
+        )
+        async for chunk in self.stream(request):
+            yield chunk
+
     async def execute(self, request: AgentRequest) -> AgentResponse:
         """Execute agent and return complete response.
         
@@ -261,11 +356,7 @@ def create_adk_agent_adapter(adk_agent: Agent | LlmAgent, app_name: Optional[str
     if app_name is None:
         app_name = adk_agent.name
     
-    adapter = ADKAgentAdapter(
-        adk_agent=adk_agent,
-        app_name=app_name,
-    )
+    adapter = ADKAgentAdapter(adk_agent=adk_agent, app_name=app_name)
     
     logger.info(f"Created ADK agent adapter for '{adk_agent.name}'")
     return adapter
-

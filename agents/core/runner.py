@@ -17,6 +17,7 @@ from google.genai import types
 
 from agents.core.interfaces import AgentRequest, AgentResponse, AgentHealthStatus
 from agents.core.adk_session_adapter import MultiTenantSessionAdapter
+from agents.helpers import scope_session_id
 from api.exceptions.base import (
     AgentExecutionException,
     SessionNotFoundException,
@@ -162,10 +163,9 @@ class MultiTenantRunner:
         
         try:
             self._execution_count += 1
-            
+
             # Create tenant-scoped session ID
-            # Format: {tenant_id}:{session_id}
-            scoped_session_id = f"{tenant_id}:{session_id}"
+            scoped_session_id = scope_session_id(tenant_id, session_id)
             
             logger.info(
                 f"Executing agent for user={user_id}, "
@@ -254,7 +254,7 @@ class MultiTenantRunner:
         
         try:
             # Create tenant-scoped session ID
-            scoped_session_id = f"{tenant_id}:{session_id}"
+            scoped_session_id = scope_session_id(tenant_id, session_id)
             
             logger.info(
                 f"Streaming agent for user={user_id}, "

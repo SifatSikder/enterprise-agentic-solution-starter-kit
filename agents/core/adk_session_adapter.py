@@ -13,6 +13,7 @@ from google.adk.events import Event
 from google.genai import types
 
 from agents.core.session_service import RedisSessionService, InMemorySessionService
+from agents.helpers import parse_scoped_session_id
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -95,23 +96,17 @@ class MultiTenantSessionAdapter(BaseSessionService):
     
     def _parse_session_id(self, session_id: str) -> tuple[str, str]:
         """Parse tenant_id and session_id from composite session_id.
-        
+
         Args:
             session_id: Composite session ID in format "{tenant_id}:{session_id}"
-        
+
         Returns:
             Tuple of (tenant_id, session_id)
-        
+
         Raises:
             ValueError: If session_id format is invalid
         """
-        parts = session_id.split(":", 1)
-        if len(parts) != 2:
-            raise ValueError(
-                f"Invalid session_id format. Expected 'tenant_id:session_id', "
-                f"got '{session_id}'"
-            )
-        return parts[0], parts[1]
+        return parse_scoped_session_id(session_id)
     
     async def create_session(self, app_name: str, user_id: str, state: Optional[dict] = None, session_id: Optional[str] = None) -> Session:
         """Create a new session.
