@@ -1,16 +1,13 @@
 """
 Main FastAPI application with Google ADK integration
 """
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from contextlib import asynccontextmanager
 import logging
-from typing import Optional
 import json
 
 from api.routes import agents, health, auth, memory
-from api.models.requests import ChatRequest, ChatResponse
 from api.middleware import (SecurityMiddleware,RateLimitMiddleware,SecurityHeadersMiddleware,AuditLogMiddleware)
 from agents.manager import AgentManager
 from config.settings import settings
@@ -22,29 +19,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global agent manager
-agent_manager: Optional[AgentManager] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events"""
-    global agent_manager
-    
+    """Startup and shutdown events."""
     # Startup
     logger.info("Starting ADK FastAPI application...")
     agent_manager = AgentManager()
     await agent_manager.initialize()
     logger.info("Agent manager initialized")
 
-    # Inject agent_manager into app state for dependency injection
+    # Store in app state for dependency injection
     app.state.agent_manager = agent_manager
 
     yield
-    
+
     # Shutdown
     logger.info("Shutting down application...")
-    if agent_manager:
-        await agent_manager.cleanup()
+    if hasattr(app.state, 'agent_manager') and app.state.agent_manager:
+        await app.state.agent_manager.cleanup()
 
 # Create FastAPI app with security schemes for Swagger UI
 app = FastAPI(
@@ -152,16 +145,19 @@ async def root():
 
 @app.websocket("/ws/chat/{session_id}")
 async def websocket_chat(websocket: WebSocket, session_id: str):
-    """WebSocket endpoint for real-time chat with agents"""
+    """WebSocket endpoint for real-time chat with agents."""
     await websocket.accept()
     logger.info(f"WebSocket connection established: {session_id}")
-    
+
+    # Get agent manager from app state
+    agent_manager = getattr(websocket.app.state, "agent_manager", None)
+
     try:
         while True:
             # Receive message
             data = await websocket.receive_text()
             message_data = json.loads(data)
-            
+
             # Process with agent manager
             if agent_manager:
                 async for chunk in agent_manager.stream_chat(
@@ -174,7 +170,7 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
                 await websocket.send_json({
                     "error": "Agent manager not initialized"
                 })
-                
+
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected: {session_id}")
     except Exception as e:

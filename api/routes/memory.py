@@ -1,6 +1,6 @@
 """Memory Bank API endpoints.
 
-Phase 5: Provides REST API for Vertex AI Memory Bank operations.
+Provides REST API for Vertex AI Memory Bank operations.
 
 Endpoints:
     POST /api/memory/save - Save session to memory
@@ -10,13 +10,15 @@ Endpoints:
 
 import logging
 from typing import List, Dict, Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from api.dependencies.auth import (
+from api.dependencies import (
     get_current_tenant,
     get_current_user,
     require_agent_execute,
+    get_agent_manager,
 )
 from agents.manager import AgentManager
 from config.settings import settings
@@ -66,12 +68,6 @@ class MemoryStatusResponse(BaseModel):
     project_id: Optional[str] = None
     location: Optional[str] = None
     agent_engine_id: Optional[str] = None
-
-
-# Dependency to get AgentManager
-async def get_agent_manager(request: Request) -> AgentManager:
-    """Get the AgentManager from app state."""
-    return request.app.state.agent_manager
 
 
 @router.post("/save", response_model=SaveSessionResponse)

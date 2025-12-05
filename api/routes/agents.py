@@ -1,31 +1,26 @@
-"""Agent management endpoints"""
-from fastapi import APIRouter, HTTPException, Depends, Request
+"""Agent management endpoints."""
+
+import logging
 from typing import List, Optional
+
+from fastapi import APIRouter, HTTPException, Depends
+
 from api.models.requests import ChatRequest, ChatResponse
 from api.models.agent import AgentInfo
-from api.dependencies.auth import (
+from api.dependencies import (
     get_current_tenant,
     get_current_user,
     require_agent_read,
     require_agent_execute,
-    require_authentication,
+    get_agent_manager,
 )
-import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-def get_agent_manager(request: Request):
-    """Get agent manager from app state via dependency injection."""
-    agent_manager = getattr(request.app.state, "agent_manager", None)
-    if not agent_manager:
-        raise HTTPException(status_code=503, detail="Agent manager not initialized")
-    return agent_manager
-
 @router.get("/list", response_model=List[AgentInfo])
 async def list_agents(
-    request: Request,
     agent_manager=Depends(get_agent_manager),
     tenant_id: str = Depends(get_current_tenant),
     user_id: Optional[str] = Depends(get_current_user),
@@ -63,7 +58,6 @@ async def list_agents(
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_agent(
     chat_request: ChatRequest,
-    request: Request,
     agent_manager=Depends(get_agent_manager),
     tenant_id: str = Depends(get_current_tenant),
     user_id: Optional[str] = Depends(get_current_user),

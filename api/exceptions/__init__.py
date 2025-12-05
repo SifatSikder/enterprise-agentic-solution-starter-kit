@@ -7,10 +7,14 @@ from api.exceptions.base import (
     AgentInitializationException,
     SessionNotFoundException,
     QuotaExceededException,
+    RateLimitExceededException,
     AuthenticationException,
     AuthorizationException,
     ValidationException,
     TenantNotFoundException,
+    TenantDisabledException,
+    ConfigurationException,
+    ExternalServiceException,
 )
 
 __all__ = [
@@ -20,9 +24,13 @@ __all__ = [
     "AgentInitializationException",
     "SessionNotFoundException",
     "QuotaExceededException",
+    "RateLimitExceededException",
     "AuthenticationException",
     "AuthorizationException",
     "ValidationException",
     "TenantNotFoundException",
+    "TenantDisabledException",
+    "ConfigurationException",
+    "ExternalServiceException",
 ]
 
