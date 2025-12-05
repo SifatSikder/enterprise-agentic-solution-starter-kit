@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ADK Agent Platform - Frontend
 
-## Getting Started
+A comprehensive Next.js frontend application for testing and interacting with the Multi-Agent ADK FastAPI backend.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Authentication**: JWT-based login with protected routes
+- **Chat Interface**: ChatGPT-style interface with real-time messaging
+- **Agent Selection**: Switch between available ADK agents
+- **Session Management**: Persistent chat history using IndexedDB
+- **Connection Modes**: REST and WebSocket support with toggle
+- **Memory Bank**: Interface for Vertex AI Memory Bank operations
+- **Settings**: Token management and API connection status
+
+## Prerequisites
+
+- Node.js 18+ (latest recommended)
+- npm
+- Backend API running on `http://localhost:8000`
+
+## Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. **Configure environment:**
+   The `.env.local` file is already configured with:
+   ```
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   ```
+   Modify if your backend runs on a different URL.
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open the application:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Pages
+
+| Path | Description |
+|------|-------------|
+| `/login` | Authentication page |
+| `/chat` | Main chat interface with agents |
+| `/memory` | Memory Bank management |
+| `/settings` | User profile and API settings |
+
+## Demo Credentials
+
+| Username | Password | Tenant | Permissions |
+|----------|----------|--------|-------------|
+| admin | admin123 | default | Full access |
+| user1 | user123 | tenant1 | agent:read, agent:execute |
+| user2 | user123 | tenant2 | agent:read, agent:execute |
+
+## API Endpoints Tested
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/refresh` - Refresh JWT token
+- `POST /api/auth/logout` - Logout
+
+### Agents
+- `GET /api/agents/list` - List available agents
+- `POST /api/agents/chat` - Chat with an agent (REST)
+- `WS /ws/chat/{session_id}` - Real-time chat (WebSocket)
+
+### Memory Bank
+- `GET /api/memory/status` - Memory Bank status
+- `POST /api/memory/save` - Save session to memory
+- `POST /api/memory/search` - Search memories
+
+### Health
+- `GET /api/health` - API health check
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Components**: shadcn/ui
+- **State Management**: Zustand
+- **Persistence**: IndexedDB (via idb)
+- **Icons**: Lucide React
+- **Toasts**: Sonner
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── app/                 # Next.js App Router pages
+│   │   ├── chat/           # Chat page
+│   │   ├── login/          # Login page
+│   │   ├── memory/         # Memory management page
+│   │   ├── settings/       # Settings page
+│   │   ├── layout.tsx      # Root layout
+│   │   └── page.tsx        # Redirects to /chat
+│   ├── components/
+│   │   ├── auth/           # Auth components
+│   │   ├── chat/           # Chat components
+│   │   └── ui/             # shadcn/ui components
+│   ├── lib/
+│   │   ├── api.ts          # API client
+│   │   ├── db.ts           # IndexedDB operations
+│   │   └── utils.ts        # Utilities
+│   ├── stores/
+│   │   ├── auth-store.ts   # Auth state
+│   │   └── session-store.ts # Session state
+│   └── types/
+│       └── index.ts        # TypeScript types
+├── .env.local              # Environment variables
+└── package.json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Run development server
+npm run dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Build for production
+npm run build
 
-## Learn More
+# Start production server
+npm start
 
-To learn more about Next.js, take a look at the following resources:
+# Lint code
+npm run lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The frontend uses a dark theme by default
+- Sessions are stored locally in IndexedDB for persistence
+- WebSocket mode enables real-time streaming responses
+- The Memory Bank features require the backend to have Vertex AI configured
