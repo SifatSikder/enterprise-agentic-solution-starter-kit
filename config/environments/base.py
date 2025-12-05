@@ -33,6 +33,8 @@ class BaseSettings(PydanticBaseSettings):
     redis_session_ttl: int = Field(default=3600, env="REDIS_SESSION_TTL")  # 1 hour
     
     # API Configuration
+    api_host: str = Field(default="0.0.0.0", env="API_HOST")
+    api_port: int = Field(default=8000, env="API_PORT")
     api_prefix: str = "/api"
     api_version: str = "v1"
     
