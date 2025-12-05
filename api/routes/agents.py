@@ -45,7 +45,7 @@ async def list_agents(
         agent_infos = []
         for agent_name, adapter in agent_manager.adapters.items():
             # Extract metadata from ADK agent adapter
-            adk_agent = adapter._adk_agent
+            adk_agent = adapter.adk_agent
             info = AgentInfo(
                 name=agent_name,
                 description=getattr(adk_agent, 'description', f"ADK agent: {agent_name}"),
