@@ -59,17 +59,13 @@ class AgentNotFoundException(BaseAPIException):
 
 class AgentExecutionException(BaseAPIException):
     """Error during agent execution."""
-    
-    def __init__(self, agent_name: str, error: str, details: Optional[Dict] = None):
+
+    def __init__(self, message: str, details: Optional[Dict] = None):
         super().__init__(
-            message=f"Agent '{agent_name}' execution failed: {error}",
+            message=message,
             status_code=500,
             error_code="AGENT_EXECUTION_FAILED",
-            details={
-                "agent_name": agent_name,
-                "error": error,
-                **(details or {}),
-            },
+            details=details or {},
         )
 
 
