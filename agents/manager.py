@@ -38,8 +38,9 @@ class AgentManager:
     async def initialize(self):
         """Initialize the agent manager and load ADK agents.
 
-        REFACTORED: Now creates ADK agent adapters with Runner support
-        Phase 5: Initializes Vertex AI Memory Bank if enabled
+        Discovers and loads ADK agents from adk_agents/ directory,
+        creates adapters with Runner support, and optionally initializes
+        Vertex AI Memory Bank for long-term memory storage.
         """
         try:
             # Add adk_agents to Python path
@@ -57,7 +58,7 @@ class AgentManager:
             logger.info("Agent manager initialized successfully")
             logger.info(f"Loaded {len(self.adapters)} ADK agent adapters: {list(self.adapters.keys())}")
 
-            # Phase 5: Initialize Vertex AI Memory Bank if enabled
+            # Initialize Vertex AI Memory Bank if enabled
             if settings.vertex_memory_enabled:
                 logger.info("Initializing Vertex AI Memory Bank...")
                 self.memory_service = VertexMemoryService(
@@ -122,7 +123,10 @@ class AgentManager:
     async def _load_adk_agent(self, agent_name: str):
         """Load an ADK agent from adk_agents/ directory.
 
-        REFACTORED: Now creates ADKAgentAdapter with Runner support
+        Creates an ADKAgentAdapter with Runner support for the agent.
+
+        Args:
+            agent_name: Name of the agent module to load
         """
         try:
             # Import the actual ADK agent module
@@ -164,8 +168,8 @@ class AgentManager:
     async def stream_chat(self, session_id: str, message: str, agent_name: str = "template_simple_agent", tenant_id: str = "default", user_id: Optional[str] = None) -> AsyncGenerator[Dict, None]:
         """Stream chat responses from an ADK agent using Runner.
 
-        REFACTORED: Now uses ADKAgentAdapter with official ADK Runner pattern
-        Phase 5: Auto-saves session to Memory Bank after completion (if enabled)
+        Uses ADKAgentAdapter with official ADK Runner pattern.
+        Auto-saves session to Memory Bank after completion if enabled.
 
         Args:
             session_id: Session identifier
@@ -209,7 +213,7 @@ class AgentManager:
                     "agent": agent_name
                 }
 
-                # Phase 5: Auto-save session to Memory Bank (if enabled)
+                # Auto-save session to Memory Bank (if enabled)
                 if settings.vertex_memory_enabled and settings.vertex_memory_auto_save:
                     try:
                         await self.save_session_to_memory(
@@ -238,7 +242,7 @@ class AgentManager:
     async def save_session_to_memory(self, session_id: str, tenant_id: str, user_id: str) -> None:
         """Save session to Vertex AI Memory Bank for long-term memory.
 
-        Phase 5: Extracts key information from the session and stores it
+        Extracts key information from the session and stores it
         as searchable memories for future conversations.
 
         Args:
@@ -299,7 +303,7 @@ class AgentManager:
     async def search_memory(self, query: str, tenant_id: str, user_id: str, limit: int = 10) -> List[Dict]:
         """Search Vertex AI Memory Bank for relevant memories.
 
-        Phase 5: Uses semantic search to find memories relevant to the query.
+        Uses semantic search to find memories relevant to the query.
 
         Args:
             query: Search query
@@ -343,8 +347,7 @@ class AgentManager:
     async def cleanup(self):
         """Cleanup resources.
 
-        REFACTORED: Now shuts down all agent adapters
-        Phase 5: Closes Memory Bank service
+        Shuts down all agent adapters and closes Memory Bank service.
         """
         # Shutdown all adapters
         for agent_name, adapter in self.adapters.items():
@@ -356,7 +359,7 @@ class AgentManager:
 
         self.adapters.clear()
 
-        # Phase 5: Close Memory Bank service
+        # Close Memory Bank service if enabled
         if self.memory_service:
             try:
                 await self.memory_service.close()

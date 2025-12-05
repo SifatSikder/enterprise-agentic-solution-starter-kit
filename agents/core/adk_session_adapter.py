@@ -317,25 +317,29 @@ class MultiTenantSessionAdapter(BaseSessionService):
     
     async def list_sessions(self, app_name: str, user_id: str) -> List[Session]:
         """List all sessions for a user.
-        
-        Note: This implementation is limited because we can't easily
-        filter by app_name and user_id with our current backend.
-        
+
+        TODO: Implement session listing with backend support.
+
+        Current limitation: The underlying session backend (Redis/In-Memory)
+        does not support filtering sessions by app_name and user_id.
+        This would require:
+        1. Maintaining a secondary index of sessions per user
+        2. Or iterating all sessions (not scalable)
+
         Args:
-            app_name: Application name
-            user_id: User identifier
-        
+            app_name: Application name (currently unused)
+            user_id: User identifier (currently unused)
+
         Returns:
-            List of Session objects (may be empty)
+            Empty list (not implemented)
         """
         if not self._initialized:
             await self.initialize()
-        
-        # Note: Our backend doesn't support filtering by app_name/user_id
-        # This is a limitation that should be addressed in production
+
+        # TODO: Implement when backend supports user session indexing
         logger.warning(
-            "list_sessions is not fully implemented - "
-            "cannot filter by app_name/user_id with current backend"
+            "list_sessions not implemented - returns empty list. "
+            f"Backend does not support filtering by app_name={app_name}, user_id={user_id}"
         )
-        
+
         return []
