@@ -52,10 +52,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
         ```
     """
     
-    def __init__(
-        self,
-        backend: Optional[RedisSessionService | InMemorySessionService] = None
-    ):
+    def __init__(self, backend: Optional[RedisSessionService | InMemorySessionService] = None):
         """Initialize multi-tenant session adapter.
         
         Args:
