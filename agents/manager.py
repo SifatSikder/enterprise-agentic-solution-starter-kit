@@ -60,7 +60,7 @@ class AgentManager:
 
             # Initialize Vertex AI Memory Bank if enabled
             if settings.vertex_memory_enabled:
-                logger.info("Initializing Vertex AI Memory Bank...")
+                logger.info("Creating Vertex AI Memory Bank...")
                 self.memory_service = VertexMemoryService(
                     project_id=settings.google_cloud_project,
                     location=settings.google_cloud_region,
