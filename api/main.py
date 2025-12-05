@@ -80,7 +80,7 @@ def custom_openapi():
         }
     }
 
-    # Apply security globally (can be overridden per endpoint)
+    # Apply security globally
     openapi_schema["security"] = [
         {"BearerAuth": []},
         {"ApiKeyAuth": []}
@@ -99,10 +99,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(AuditLogMiddleware)
 
 # 3. Rate limiting
-app.add_middleware(
-    RateLimitMiddleware,
-    requests_per_minute=settings.rate_limit_per_minute
-)
+app.add_middleware(RateLimitMiddleware,requests_per_minute=settings.rate_limit_per_minute)
 
 # 4. Authentication & authorization
 # Parse API keys from environment

@@ -104,10 +104,7 @@ class VertexMemoryService:
             logger.info("Initializing Vertex AI Memory Bank...")
             
             # Initialize Vertex AI client
-            self._vertexai_client = vertexai.Client(
-                project=self.project_id,
-                location=self.location
-            )
+            self._vertexai_client = vertexai.Client(project=self.project_id,location=self.location)
             
             # Create or get Agent Engine instance
             if self.agent_engine_id:
@@ -122,11 +119,7 @@ class VertexMemoryService:
                 )
             
             # Initialize Memory Bank service
-            self._memory_service = VertexAiMemoryBankService(
-                project=self.project_id,
-                location=self.location,
-                agent_engine_id=self.agent_engine_id
-            )
+            self._memory_service = VertexAiMemoryBankService(project=self.project_id, location=self.location, agent_engine_id=self.agent_engine_id)
             
             self._initialized = True
             logger.info("✅ Vertex AI Memory Bank initialized successfully")

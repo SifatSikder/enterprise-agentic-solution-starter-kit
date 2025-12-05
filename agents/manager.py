@@ -148,10 +148,7 @@ class AgentManager:
                 logger.debug(f"Set GOOGLE_API_KEY environment variable for agent {agent_name}")
 
             # Create ADK agent adapter with Runner
-            adapter = create_adk_agent_adapter(
-                adk_agent=root_agent,
-                app_name=agent_name,
-            )
+            adapter = create_adk_agent_adapter(adk_agent=root_agent,app_name=agent_name)
 
             # Initialize adapter
             await adapter.initialize()

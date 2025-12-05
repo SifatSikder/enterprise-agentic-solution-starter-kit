@@ -16,12 +16,7 @@ from typing import AsyncIterator, Optional, Dict, Any
 from google.adk.agents import Agent, LlmAgent
 from google.genai import types
 
-from agents.core.interfaces import (
-    AgentInterface,
-    AgentRequest,
-    AgentResponse,
-    AgentHealthStatus,
-)
+from agents.core.interfaces import (AgentInterface, AgentRequest, AgentResponse, AgentHealthStatus)
 from agents.core.runner import MultiTenantRunner, RunnerConfig
 from api.exceptions.base import AgentExecutionException
 
@@ -92,10 +87,7 @@ class ADKAgentAdapter(AgentInterface):
         
         # Create runner config
         if runner_config is None:
-            runner_config = RunnerConfig(
-                app_name=app_name,
-                agent=adk_agent,
-            )
+            runner_config = RunnerConfig(app_name=app_name,agent=adk_agent)
         
         # Create multi-tenant runner
         self._runner = MultiTenantRunner(runner_config)
@@ -356,7 +348,5 @@ def create_adk_agent_adapter(adk_agent: Agent | LlmAgent, app_name: Optional[str
     if app_name is None:
         app_name = adk_agent.name
     
-    adapter = ADKAgentAdapter(adk_agent=adk_agent, app_name=app_name)
-    
-    logger.info(f"Created ADK agent adapter for '{adk_agent.name}'")
+    adapter = ADKAgentAdapter(adk_agent=adk_agent, app_name=app_name)    
     return adapter

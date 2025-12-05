@@ -74,10 +74,7 @@ class MultiTenantSessionAdapter(BaseSessionService):
         if self._backend is None:
             if settings.redis_url:
                 logger.info("Using RedisSessionService backend")
-                self._backend = RedisSessionService(
-                    redis_url=settings.redis_url,
-                    default_ttl=settings.redis_session_ttl,
-                )
+                self._backend = RedisSessionService(redis_url=settings.redis_url, default_ttl=settings.redis_session_ttl)
             else:
                 logger.warning("Using InMemorySessionService backend (dev only)")
                 self._backend = InMemorySessionService()

@@ -18,11 +18,7 @@ from google.genai import types
 from agents.core.interfaces import AgentRequest, AgentResponse, AgentHealthStatus
 from agents.core.adk_session_adapter import MultiTenantSessionAdapter
 from agents.helpers import scope_session_id
-from api.exceptions.base import (
-    AgentExecutionException,
-    SessionNotFoundException,
-    TenantNotFoundException,
-)
+from api.exceptions.base import (AgentExecutionException)
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -34,7 +30,7 @@ class RunnerConfig:
     
     app_name: str
     agent: Agent
-    session_service: Optional[Any] = None  # ADK SessionService
+    session_service: Optional[Any] = None
     enable_metrics: bool = True
     enable_logging: bool = True
     timeout_seconds: int = 300
@@ -114,11 +110,7 @@ class MultiTenantRunner:
                 await self._session_service.initialize()
 
             # Create ADK Runner
-            self._adk_runner = ADKRunner(
-                agent=self.agent,
-                app_name=self.app_name,
-                session_service=self._session_service
-            )
+            self._adk_runner = ADKRunner(agent=self.agent, app_name=self.app_name, session_service=self._session_service)
 
             logger.info(f"MultiTenantRunner initialized for '{self.app_name}'")
 
