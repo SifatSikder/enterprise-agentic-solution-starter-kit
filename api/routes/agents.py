@@ -84,27 +84,25 @@ async def chat_with_agent(
     ```
     """
     try:
-        # Use tenant_id from authentication for session isolation
-        # Session ID format: {tenant_id}:{user_session_id}
-        user_session_id = chat_request.session_id or f"rest_{id(chat_request)}"
-        tenant_session_id = f"{tenant_id}:{user_session_id}"
-
+        # Session ID scoping is handled by the manager
+        session_id = chat_request.session_id or f"rest_{id(chat_request)}"
         agent_name = chat_request.agent or "template_simple_agent"
 
         logger.info(
             f"Chat request: tenant={tenant_id}, user={user_id}, "
-            f"agent={agent_name}, session={tenant_session_id}"
+            f"agent={agent_name}, session={session_id}"
         )
 
         # Use agent manager to get response
         # For REST endpoint, collect all chunks into one response
+        # Manager handles session ID scoping internally
         full_message = ""
 
         async for chunk in agent_manager.stream_chat(
-            session_id=tenant_session_id,
+            session_id=session_id,
             message=chat_request.message,
             agent_name=agent_name,
-            tenant_id=tenant_id,  # Pass tenant_id for multi-tenant session isolation
+            tenant_id=tenant_id,
         ):
             if chunk.get("type") == "chunk":
                 full_message += chunk.get("content", "")
@@ -112,14 +110,14 @@ async def chat_with_agent(
                 raise HTTPException(status_code=500, detail=chunk["error"])
 
         logger.info(
-            f"Chat completed: tenant={tenant_id}, session={tenant_session_id}, "
+            f"Chat completed: tenant={tenant_id}, session={session_id}, "
             f"response_length={len(full_message)}"
         )
 
         return ChatResponse(
             message=full_message,
             agent=agent_name,
-            session_id=user_session_id  # Return user's session ID (without tenant prefix)
+            session_id=session_id
         )
     except HTTPException:
         raise
