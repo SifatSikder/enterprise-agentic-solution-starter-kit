@@ -1,6 +1,6 @@
 """Agent interfaces and protocols for enterprise multi-agent framework."""
 
-from typing import Protocol, AsyncIterator, Dict, Any, Optional, List
+from typing import Protocol, AsyncIterator, Dict, Any, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -157,56 +157,5 @@ class AgentInterface(Protocol):
         """Cleanup agent resources.
         
         Called when agent is being unloaded.
-        """
-        ...
-
-
-class SessionService(Protocol):
-    """Protocol for session storage implementations.
-    
-    Supports different backends (Redis, Firestore, Memory, etc.)
-    """
-    
-    async def get_session(self, session_id: str, tenant_id: str) -> Optional[List[Dict[str, Any]]]:
-        """Get session history.
-
-        Args:
-            session_id: Session identifier
-            tenant_id: Tenant identifier for isolation
-
-        Returns:
-            List of messages in session, or None if session doesn't exist.
-            Empty list [] means session exists but has no messages yet.
-        """
-        ...
-    
-    async def save_session(self, session_id: str, tenant_id: str, messages: List[Dict[str, Any]]) -> None:
-        """Save session history.
-        
-        Args:
-            session_id: Session identifier
-            tenant_id: Tenant identifier for isolation
-            messages: List of messages to save
-        """
-        ...
-    
-    async def delete_session(self, session_id: str, tenant_id: str) -> None:
-        """Delete session.
-        
-        Args:
-            session_id: Session identifier
-            tenant_id: Tenant identifier for isolation
-        """
-        ...
-    
-    async def list_sessions(self, tenant_id: str, user_id: Optional[str] = None) -> List[str]:
-        """List all sessions for a tenant/user.
-        
-        Args:
-            tenant_id: Tenant identifier
-            user_id: Optional user identifier for filtering
-            
-        Returns:
-            List of session IDs
         """
         ...

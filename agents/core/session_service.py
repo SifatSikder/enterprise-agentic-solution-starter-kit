@@ -1,12 +1,14 @@
-"""Session storage implementations for multi-tenant agent framework."""
+"""Session storage implementations for multi-tenant agent framework.
+
+These classes provide the storage backend for MultiTenantSessionAdapter,
+which implements ADK's BaseSessionService interface.
+"""
 
 import json
 import logging
 from typing import List, Dict, Any, Optional
 
 import redis.asyncio as redis
-
-from agents.core.interfaces import SessionService
 
 logger = logging.getLogger(__name__)
 
