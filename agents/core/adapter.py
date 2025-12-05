@@ -28,15 +28,15 @@ from api.exceptions.base import AgentExecutionException
 logger = logging.getLogger(__name__)
 
 
-class ADKAgentAdapter:
+class ADKAgentAdapter(AgentInterface):
     """Adapter to wrap ADK Agent/LlmAgent with AgentInterface protocol.
-    
+
     This adapter bridges the gap between:
     - Google ADK agents (Agent, LlmAgent)
     - Our AgentInterface protocol (for FastAPI integration)
-    
+
     Features:
-    - Implements AgentInterface protocol
+    - Explicitly implements AgentInterface protocol
     - Uses MultiTenantRunner for execution
     - Handles streaming and non-streaming responses
     - Provides health checks
